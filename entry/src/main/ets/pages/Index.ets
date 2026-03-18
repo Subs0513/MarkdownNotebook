@@ -1,3 +1,5 @@
+import { router } from '@kit.ArkUI'
+
 class AppMenuItem {
   key: string = ''
   title: string = ''
@@ -113,6 +115,16 @@ struct Index {
       i += 1
     }
     this.noteItems = this.noteItems.slice()
+  }
+
+  private openEditor(): void {
+    router.pushUrl({
+      url: 'pages/EditorPage',
+      params: {
+        noteTitle: '未命名笔记',
+        noteContent: ''
+      }
+    })
   }
 
   @Builder
@@ -267,6 +279,9 @@ struct Index {
     .padding({ left: 18, right: 18 })
     .backgroundColor('#FFFFFF')
     .borderRadius(24)
+    .onClick(() => {
+      this.openEditor()
+    })
   }
 
   @Builder
@@ -337,6 +352,15 @@ struct Index {
     .padding({ left: 18, right: 18 })
     .backgroundColor('#FFFFFF')
     .borderRadius(24)
+    .onClick(() => {
+      router.pushUrl({
+        url: 'pages/EditorPage',
+        params: {
+          noteTitle: item.title,
+          noteContent: ''
+        }
+      })
+    })
   }
 
   @Builder
@@ -400,7 +424,6 @@ struct Index {
 
   build() {
     Row() {
-      // 左侧
       Column() {
         Row() {
           this.buildSidebarTopButton()
@@ -450,7 +473,6 @@ struct Index {
         color: '#E7EBF0'
       })
 
-      // 右侧
       Column() {
         this.buildRightHeader()
         this.buildRightContentArea()
