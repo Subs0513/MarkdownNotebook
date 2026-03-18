@@ -1,0 +1,56 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\Puppet\\.ohos\\config\\default_MarkdownNotebook_5Q0wY9hGQ-4pZm7DVVc-UHSS5ZRKD27tOeozLEodfmo=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BBA182C75917131A4646C50D26D12D2DAAB4766E24E9B9942F952CF30B986BE6EE628B70F7FE7D6",
+          "profile": "C:\\Users\\Puppet\\.ohos\\config\\default_MarkdownNotebook_5Q0wY9hGQ-4pZm7DVVc-UHSS5ZRKD27tOeozLEodfmo=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\Puppet\\.ohos\\config\\default_MarkdownNotebook_5Q0wY9hGQ-4pZm7DVVc-UHSS5ZRKD27tOeozLEodfmo=.p12",
+          "storePassword": "0000001B66D7776838B9E5EFA1A83CC55906EC08221A02EB87FAC1374AC987947DDF9F084AC7D4058CE1CB"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "6.0.2(22)",
+        "compatibleSdkVersion": "6.0.2(22)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
