@@ -117,12 +117,12 @@ struct Index {
     this.noteItems = this.noteItems.slice()
   }
 
-  private openEditor(): void {
+  private openEditor(noteTitle: string, noteContent: string): void {
     router.pushUrl({
       url: 'pages/EditorPage',
       params: {
-        noteTitle: '未命名笔记',
-        noteContent: ''
+        noteTitle: noteTitle,
+        noteContent: noteContent
       }
     })
   }
@@ -280,7 +280,7 @@ struct Index {
     .backgroundColor('#FFFFFF')
     .borderRadius(24)
     .onClick(() => {
-      this.openEditor()
+      this.openEditor('未命名笔记', '')
     })
   }
 
@@ -353,13 +353,7 @@ struct Index {
     .backgroundColor('#FFFFFF')
     .borderRadius(24)
     .onClick(() => {
-      router.pushUrl({
-        url: 'pages/EditorPage',
-        params: {
-          noteTitle: item.title,
-          noteContent: ''
-        }
-      })
+      this.openEditor(item.title, '')
     })
   }
 

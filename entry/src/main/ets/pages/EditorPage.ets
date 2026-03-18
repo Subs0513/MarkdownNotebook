@@ -1,4 +1,5 @@
-import { router } from '@kit.ArkUI'
+import { router, window } from '@kit.ArkUI'
+import { common } from '@kit.AbilityKit'
 
 @Entry
 @Component
@@ -39,6 +40,37 @@ struct EditorPage {
           this.sourceText = incoming
         }
       }
+    }
+
+    this.hideSystemBars()
+  }
+
+  aboutToDisappear(): void {
+    this.showSystemBars()
+  }
+
+  private async hideSystemBars(): Promise<void> {
+    try {
+      let context: common.UIAbilityContext =
+        this.getUIContext().getHostContext() as common.UIAbilityContext
+      let lastWindow: window.Window = await window.getLastWindow(context)
+      await lastWindow.setWindowLayoutFullScreen(true)
+      await lastWindow.setSpecificSystemBarEnabled('status', false)
+      await lastWindow.setSpecificSystemBarEnabled('navigationIndicator', false)
+    } catch (err) {
+      console.error('hideSystemBars failed')
+    }
+  }
+
+  private async showSystemBars(): Promise<void> {
+    try {
+      let context: common.UIAbilityContext =
+        this.getUIContext().getHostContext() as common.UIAbilityContext
+      let lastWindow: window.Window = await window.getLastWindow(context)
+      await lastWindow.setSpecificSystemBarEnabled('status', true)
+      await lastWindow.setSpecificSystemBarEnabled('navigationIndicator', true)
+    } catch (err) {
+      console.error('showSystemBars failed')
     }
   }
 
@@ -175,6 +207,7 @@ struct EditorPage {
       .width('100%')
       .height('100%')
       .backgroundColor('#FFFFFF')
+      .borderRadius(0)
       .onReady(() => {
         this.renderReady = true
         if (this.needReloadRender) {
@@ -199,6 +232,7 @@ struct EditorPage {
       .fontColor('#1F2329')
       .placeholderColor('#9AA0AA')
       .backgroundColor(Color.Transparent)
+      .borderRadius(0)
       .padding({ left: 20, right: 20, top: 20, bottom: 80 })
       .onChange((value: string) => {
         this.sourceText = value
@@ -242,7 +276,7 @@ struct EditorPage {
         Blank()
       }
       .width('100%')
-      .padding({ left: 20, right: 20, top: 18, bottom: 14 })
+      .padding({ left: 20, right: 20, top: 10, bottom: 10 })
       .backgroundColor('#F7F8FA')
 
       Stack({ alignContent: Alignment.BottomStart }) {
@@ -256,7 +290,7 @@ struct EditorPage {
         .width('100%')
         .height('100%')
         .backgroundColor('#FFFFFF')
-        .borderRadius(22)
+        .borderRadius(0)
 
         Row() {
           Button(this.showSource ? '显示渲染效果' : '显示源代码')
@@ -278,12 +312,7 @@ struct EditorPage {
         .width('100%')
         .padding({ left: 16, right: 16, top: 10, bottom: 12 })
         .backgroundColor('#FFFFFF')
-        .borderRadius({
-          topLeft: 0,
-          topRight: 0,
-          bottomLeft: 22,
-          bottomRight: 22
-        })
+        .borderRadius(0)
       }
       .width('100%')
       .layoutWeight(1)
