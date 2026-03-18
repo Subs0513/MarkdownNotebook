@@ -1,16 +1,22 @@
-import { router } from '@kit.ArkUI'
-import { EditorTopBar } from '../components/EditorTopBar'
-import { EditorBottomBar } from '../components/EditorBottomBar'
-import { MarkdownSourceEditor } from '../components/MarkdownSourceEditor'
-import { MarkdownRenderEditor } from '../components/MarkdownRenderEditor'
-import { DEFAULT_MARKDOWN_TEXT, EDITOR_BG_COLOR, EDITOR_PANEL_COLOR } from '../constants/editorConstants'
-import { hideSystemBars, showSystemBars } from '../utils/windowHelper'
+import { router, window } from '@kit.ArkUI'
+import { common } from '@kit.AbilityKit'
 
 @Entry
 @Component
 struct EditorPage {
   @State noteTitle: string = '未命名笔记'
-  @State sourceText: string = DEFAULT_MARKDOWN_TEXT
+  @State sourceText: string =
+    '# 未命名笔记\n' +
+      '\n' +
+      '现在默认是 RichEditor 连续编辑模式。\n' +
+      '\n' +
+      '## 这一版解决的问题\n' +
+      '- 支持连续输入\n' +
+      '- 支持回车换行\n' +
+      '- 支持一次性粘贴多行\n' +
+      '\n' +
+      '> 点击左下角可以切换到源代码模式。'
+
   @State showSource: boolean = false
   @State renderReady: boolean = false
   @State needReloadRender: boolean = false
@@ -36,11 +42,36 @@ struct EditorPage {
       }
     }
 
-    hideSystemBars(this.getUIContext())
+    this.hideSystemBars()
   }
 
   aboutToDisappear(): void {
-    showSystemBars(this.getUIContext())
+    this.showSystemBars()
+  }
+
+  private async hideSystemBars(): Promise<void> {
+    try {
+      let context: common.UIAbilityContext =
+        this.getUIContext().getHostContext() as common.UIAbilityContext
+      let lastWindow: window.Window = await window.getLastWindow(context)
+      await lastWindow.setWindowLayoutFullScreen(true)
+      await lastWindow.setSpecificSystemBarEnabled('status', false)
+      await lastWindow.setSpecificSystemBarEnabled('navigationIndicator', false)
+    } catch (err) {
+      console.error('hideSystemBars failed')
+    }
+  }
+
+  private async showSystemBars(): Promise<void> {
+    try {
+      let context: common.UIAbilityContext =
+        this.getUIContext().getHostContext() as common.UIAbilityContext
+      let lastWindow: window.Window = await window.getLastWindow(context)
+      await lastWindow.setSpecificSystemBarEnabled('status', true)
+      await lastWindow.setSpecificSystemBarEnabled('navigationIndicator', true)
+    } catch (err) {
+      console.error('showSystemBars failed')
+    }
   }
 
   private getWordCount(): number {
@@ -59,7 +90,6 @@ struct EditorPage {
   }
 
   private switchToSourceMode(): void {
-    this.syncSourceFromRichEditor()
     this.showSource = true
   }
 
@@ -96,51 +126,191 @@ struct EditorPage {
     this.sourceText = result
   }
 
-  private handleBack(): void {
-    if (!this.showSource) {
-      this.syncSourceFromRichEditor()
+  private insertStyledLine(line: string, isLast: boolean): void {
+    if (line.startsWith('# ')) {
+      this.richController.addTextSpan(line.substring(2), {
+        style: {
+          fontSize: 30,
+          fontWeight: FontWeight.Bold,
+          fontColor: '#1F2329'
+        }
+      })
+    } else if (line.startsWith('## ')) {
+      this.richController.addTextSpan(line.substring(3), {
+        style: {
+          fontSize: 24,
+          fontWeight: FontWeight.Bold,
+          fontColor: '#1F2329'
+        }
+      })
+    } else if (line.startsWith('### ')) {
+      this.richController.addTextSpan(line.substring(4), {
+        style: {
+          fontSize: 20,
+          fontWeight: FontWeight.Medium,
+          fontColor: '#1F2329'
+        }
+      })
+    } else if (line.startsWith('> ')) {
+      this.richController.addTextSpan(line.substring(2), {
+        style: {
+          fontSize: 18,
+          fontColor: '#5C6370'
+        }
+      })
+    } else if (line.startsWith('- ')) {
+      this.richController.addTextSpan('• ' + line.substring(2), {
+        style: {
+          fontSize: 18,
+          fontColor: '#1F2329'
+        }
+      })
+    } else if (line.startsWith('* ')) {
+      this.richController.addTextSpan('• ' + line.substring(2), {
+        style: {
+          fontSize: 18,
+          fontColor: '#1F2329'
+        }
+      })
+    } else {
+      this.richController.addTextSpan(line, {
+        style: {
+          fontSize: 18,
+          fontColor: '#1F2329'
+        }
+      })
     }
-    router.back()
+
+    if (!isLast) {
+      this.richController.addTextSpan('\n', {
+        style: {
+          fontSize: 18,
+          fontColor: '#1F2329'
+        }
+      })
+    }
+  }
+
+  private loadMarkdownToRichEditor(): void {
+    let lines: Array<string> = this.sourceText.split('\n')
+    let i: number = 0
+    while (i < lines.length) {
+      this.insertStyledLine(lines[i], i === lines.length - 1)
+      i += 1
+    }
+  }
+
+  @Builder
+  private buildRenderModeArea() {
+    RichEditor({ controller: this.richController })
+      .width('100%')
+      .height('100%')
+      .backgroundColor('#FFFFFF')
+      .borderRadius(0)
+      .onReady(() => {
+        this.renderReady = true
+        if (this.needReloadRender) {
+          this.needReloadRender = false
+        }
+        this.loadMarkdownToRichEditor()
+      })
+      .onDidChange(() => {
+        // 当前版本里，sourceText 作为唯一真实 Markdown 数据源。
+        // 渲染模式只负责展示，不再从 RichEditor 反向覆盖 sourceText，
+        // 否则会把 "# "、"> "、"- " 等 Markdown 标记丢掉。
+      })
+  }
+
+  @Builder
+  private buildSourceModeArea() {
+    TextArea({
+      text: this.sourceText,
+      placeholder: '请输入 Markdown 源代码...'
+    })
+      .width('100%')
+      .height('100%')
+      .fontSize(18)
+      .fontColor('#1F2329')
+      .placeholderColor('#9AA0AA')
+      .backgroundColor(Color.Transparent)
+      .borderRadius(0)
+      .padding({ left: 20, right: 20, top: 20, bottom: 80 })
+      .onChange((value: string) => {
+        this.sourceText = value
+      })
   }
 
   build() {
     Column() {
-      EditorTopBar({
-        noteTitle: this.noteTitle,
-        showSource: this.showSource,
-        onBack: () => {
-          this.handleBack()
+      Row() {
+        Row() {
+          Text('←')
+            .fontSize(24)
+            .fontColor('#1F2329')
         }
-      })
+        .width(48)
+        .height(48)
+        .borderRadius(24)
+        .backgroundColor('#F1F3F6')
+        .justifyContent(FlexAlign.Center)
+        .margin({ right: 16 })
+        .onClick(() => {
+          router.back()
+        })
+
+        Column() {
+          Text(this.noteTitle)
+            .fontSize(26)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1F2329')
+
+          Text(this.showSource ? '源代码模式' : '渲染编辑模式')
+            .fontSize(13)
+            .fontColor('#6B7280')
+            .margin({ top: 6 })
+        }
+        .alignItems(HorizontalAlign.Start)
+
+        Blank()
+      }
+      .width('100%')
+      .padding({ left: 20, right: 20, top: 10, bottom: 10 })
+      .backgroundColor('#F7F8FA')
 
       Stack({ alignContent: Alignment.BottomStart }) {
         Column() {
           if (this.showSource) {
-            MarkdownSourceEditor({ sourceText: $sourceText })
+            this.buildSourceModeArea()
           } else {
-            MarkdownRenderEditor({
-              sourceText: $sourceText,
-              renderReady: $renderReady,
-              needReloadRender: $needReloadRender,
-              controller: this.richController,
-              onContentChanged: () => {
-                this.syncSourceFromRichEditor()
-              }
-            })
+            this.buildRenderModeArea()
           }
         }
         .width('100%')
         .height('100%')
-        .backgroundColor(EDITOR_PANEL_COLOR)
+        .backgroundColor('#FFFFFF')
         .borderRadius(0)
 
-        EditorBottomBar({
-          showSource: this.showSource,
-          wordCount: this.getWordCount(),
-          onToggleMode: () => {
-            this.toggleMode()
-          }
-        })
+        Row() {
+          Button(this.showSource ? '显示渲染效果' : '显示源代码')
+            .type(ButtonType.Capsule)
+            .fontSize(14)
+            .fontColor('#1F2329')
+            .backgroundColor('#EEF1F6')
+            .height(38)
+            .onClick(() => {
+              this.toggleMode()
+            })
+
+          Blank()
+
+          Text(this.getWordCount().toString() + ' 字')
+            .fontSize(14)
+            .fontColor('#7A808A')
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 10, bottom: 12 })
+        .backgroundColor('#FFFFFF')
+        .borderRadius(0)
       }
       .width('100%')
       .layoutWeight(1)
@@ -148,6 +318,6 @@ struct EditorPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(EDITOR_BG_COLOR)
+    .backgroundColor('#EEF1F5')
   }
 }
