@@ -3,6 +3,7 @@ import { EDITOR_PLACEHOLDER_COLOR, EDITOR_TEXT_COLOR } from '../constants/editor
 @Component
 export struct MarkdownSourceEditor {
   @Link sourceText: string
+  onTextChanged: (() => void) | null = null
 
   build() {
     TextArea({
@@ -19,6 +20,9 @@ export struct MarkdownSourceEditor {
       .padding({ left: 20, right: 20, top: 20, bottom: 80 })
       .onChange((value: string) => {
         this.sourceText = value
+        if (this.onTextChanged !== null) {
+          this.onTextChanged()
+        }
       })
   }
 }

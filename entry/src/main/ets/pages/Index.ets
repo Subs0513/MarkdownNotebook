@@ -697,6 +697,12 @@ struct Index {
         Column() {
           Scroll() {
             Column() {
+              Text('MarkdownNotebook')
+                .fontSize(28)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#1F2329')
+                .margin({ top: 12, bottom: 20, left: 16 })
+
               Text('我的笔记')
                 .fontSize(18)
                 .fontWeight(FontWeight.Medium)

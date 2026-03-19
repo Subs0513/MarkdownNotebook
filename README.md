@@ -1,11 +1,10 @@
 # MarkdownNotebook开发日志
 
-纯血鸿蒙Markdown编辑器
+纯血鸿蒙Markdown编辑器  
 
 
 
 【26/03/18】  
-
 0.0.0 编写主页面Index.ets  
 0.0.1 新建edit页  
 0.0.2 改进为沉浸模式  
@@ -15,7 +14,5 @@
 着急等待改的：顶部导航栏；EditorPage.ets拆分
 
 【26/03/19】  
-
-0.0.6 改进主页面Index.ets  
-
-
+0.0.6 改进主页面Index.ets   
+0.0.7 拆分EditorPage.ets，改进 Index.ets  

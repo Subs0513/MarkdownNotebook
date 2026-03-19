@@ -1,4 +1,4 @@
-import { parseMarkdownLines } from '../utils/markdownBlockParser'
+import { renderMarkdownToRichEditor } from '../utils/markdownRichRenderer'
 
 @Component
 export struct MarkdownRenderEditor {
@@ -7,31 +7,6 @@ export struct MarkdownRenderEditor {
   @Link needReloadRender: boolean
   controller: RichEditorController = new RichEditorController()
   onContentChanged: (() => void) | null = null
-
-  private loadMarkdownToRichEditor(): void {
-    let lines = parseMarkdownLines(this.sourceText)
-    let i: number = 0
-    while (i < lines.length) {
-      let item = lines[i]
-      this.controller.addTextSpan(item.text, {
-        style: {
-          fontSize: item.fontSize,
-          fontColor: item.fontColor,
-          fontWeight: item.fontWeight
-        }
-      })
-
-      if (i !== lines.length - 1) {
-        this.controller.addTextSpan('\n', {
-          style: {
-            fontSize: 18,
-            fontColor: '#1F2329'
-          }
-        })
-      }
-      i += 1
-    }
-  }
 
   build() {
     RichEditor({ controller: this.controller })
@@ -44,7 +19,7 @@ export struct MarkdownRenderEditor {
         if (this.needReloadRender) {
           this.needReloadRender = false
         }
-        this.loadMarkdownToRichEditor()
+        renderMarkdownToRichEditor(this.controller, this.sourceText)
       })
       .onDidChange(() => {
         if (this.onContentChanged !== null) {
