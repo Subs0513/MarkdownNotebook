@@ -16,6 +16,7 @@ struct Index {
   @State activeFolderTitle: string = ''
   @State folderMenuOffsetX: number = 0
   @State folderMenuOffsetY: number = 0
+  @State showSettingsDialog: boolean = false
 
   private menuItems: Array<AppMenuItem> = [
     new AppMenuItem('all', '全部笔记', 0, '📄'),
@@ -180,6 +181,14 @@ struct Index {
     this.showFolderMenu = false
   }
 
+  private openSettingsDialog(): void {
+    this.showSettingsDialog = true
+  }
+
+  private closeSettingsDialog(): void {
+    this.showSettingsDialog = false
+  }
+
   private getFolderTitleByKey(folderKey: string): string {
     let i: number = 0
     while (i < this.folders.length) {
@@ -328,6 +337,31 @@ struct Index {
   }
 
   @Builder
+  private buildHeaderActionButton(iconText: string, label: string, onTap: () => void) {
+    Row() {
+      Text(iconText)
+        .fontSize(22)
+        .fontColor('#2D3138')
+        .margin({ right: label.length > 0 ? 6 : 0 })
+
+      if (label.length > 0) {
+        Text(label)
+          .fontSize(17)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#2D3138')
+      }
+    }
+    .height(52)
+    .padding({ left: 18, right: 18 })
+    .borderRadius(26)
+    .backgroundColor('#F1F3F6')
+    .justifyContent(FlexAlign.Center)
+    .onClick(() => {
+      onTap()
+    })
+  }
+
+  @Builder
   private buildRightHeader() {
     Row() {
       Text(this.getCurrentTitle())
@@ -345,34 +379,15 @@ struct Index {
 
         Blank()
       }
-      .width(360)
+      .width(420)
       .height(52)
       .backgroundColor('#F1F3F6')
       .borderRadius(26)
       .margin({ right: 16 })
 
-      Row() {
-        Text('▦')
-          .fontSize(24)
-          .fontColor('#2D3138')
-      }
-      .width(52)
-      .height(52)
-      .borderRadius(26)
-      .backgroundColor('#F1F3F6')
-      .justifyContent(FlexAlign.Center)
-      .margin({ right: 12 })
-
-      Row() {
-        Text('⋮')
-          .fontSize(26)
-          .fontColor('#2D3138')
-      }
-      .width(52)
-      .height(52)
-      .borderRadius(26)
-      .backgroundColor('#F1F3F6')
-      .justifyContent(FlexAlign.Center)
+      this.buildHeaderActionButton('☰', '', () => {
+        this.openSettingsDialog()
+      })
     }
     .width('100%')
     .padding({ left: 28, right: 28, top: 20, bottom: 12 })
@@ -548,6 +563,43 @@ struct Index {
   }
 
   @Builder
+  private buildSettingsItem(title: string) {
+    Row() {
+      Text(title)
+        .fontSize(18)
+        .fontColor('#1F2329')
+
+      Blank()
+
+      Text('›')
+        .fontSize(22)
+        .fontColor('#A0A8B4')
+    }
+    .width('100%')
+    .height(56)
+    .padding({ left: 20, right: 20 })
+    .borderRadius(16)
+    .backgroundColor('#F7F9FC')
+  }
+
+  @Builder
+  private buildSettingsSection(title: string, items: Array<string>) {
+    Column({ space: 10 }) {
+      Text(title)
+        .fontSize(15)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#8A93A2')
+        .width('100%')
+
+      ForEach(items, (item: string) => {
+        this.buildSettingsItem(item)
+      }, (item: string) => item)
+    }
+    .width('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
   private buildFolderActionDialog() {
     if (this.showFolderMenu) {
       Stack({ alignContent: Alignment.TopStart }) {
@@ -593,17 +645,56 @@ struct Index {
     }
   }
 
+  @Builder
+  private buildSettingsDialog() {
+    if (this.showSettingsDialog) {
+      Stack({ alignContent: Alignment.Center }) {
+        Column() {
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#66000000')
+        .onClick(() => {
+          this.closeSettingsDialog()
+        })
+
+        Column({ space: 20 }) {
+          Row() {
+            Text('设置')
+              .fontSize(28)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#1F2329')
+
+            Blank()
+
+            Text('✕')
+              .fontSize(24)
+              .fontColor('#6E7786')
+              .onClick(() => {
+                this.closeSettingsDialog()
+              })
+          }
+          .width('100%')
+
+          this.buildSettingsSection('常用设置', ['Markdown 语法设置', '问题与建议', '检查更新'])
+          this.buildSettingsSection('隐私与信息', ['隐私声明', '收集个人信息清单'])
+          this.buildSettingsSection('更多', ['关于', '服务协议'])
+        }
+        .width(520)
+        .padding({ left: 24, right: 24, top: 24, bottom: 24 })
+        .backgroundColor('#FFFFFF')
+        .borderRadius(28)
+        .shadow({ radius: 30, color: '#33000000', offsetX: 0, offsetY: 10 })
+      }
+      .width('100%')
+      .height('100%')
+    }
+  }
+
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       Row() {
         Column() {
-          Row() {
-            this.buildSidebarTopButton()
-            Blank()
-          }
-          .width('100%')
-          .padding({ left: 18, right: 18, top: 18, bottom: 20 })
-
           Scroll() {
             Column() {
               Text('我的笔记')
@@ -640,7 +731,7 @@ struct Index {
             .height('100%')
             .alignItems(HorizontalAlign.Start)
             .justifyContent(FlexAlign.Start)
-            .padding({ bottom: 12 })
+            .padding({ top: 18, bottom: 12 })
           }
           .width('100%')
           .layoutWeight(1)
@@ -679,6 +770,7 @@ struct Index {
       .justifyContent(FlexAlign.Start)
 
       this.buildFolderActionDialog()
+      this.buildSettingsDialog()
     }
     .width('100%')
     .height('100%')
